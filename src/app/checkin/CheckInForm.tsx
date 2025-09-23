@@ -3,6 +3,7 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function CheckInForm() {
     const params = useSearchParams();
@@ -34,7 +35,7 @@ export default function CheckInForm() {
         }
     }
 
-    // LED용 단일 화면: 이름 입력 완료 후 상태 3초 후 초기화
+    // 입력 후 자동 초기화 (3초 뒤)
     useEffect(() => {
         if (submitted) {
             const timeout = setTimeout(() => {
@@ -47,27 +48,41 @@ export default function CheckInForm() {
     }, [submitted]);
 
     return (
-        <main className="flex flex-col items-center justify-center h-screen w-screen bg-gray-100">
-            <h1 className="text-4xl font-bold mb-8">출석 체크</h1>
+        <main className="flex flex-col items-center justify-center h-screen w-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6">
+            <h1 className="text-3xl font-extrabold mb-8 text-blue-800">출석 체크</h1>
 
             <input
                 type="text"
                 placeholder="이름 입력"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="border-4 border-blue-600 p-4 rounded w-96 text-2xl text-center mb-6 focus:outline-none focus:ring-4 focus:ring-blue-400"
+                className="border-2 border-blue-400 p-4 rounded-xl w-full max-w-sm text-xl text-center mb-6 shadow-md focus:outline-none focus:ring-4 focus:ring-blue-300"
                 disabled={submitted}
             />
 
             <button
                 onClick={submit}
-                className="px-8 py-4 bg-blue-600 text-white text-2xl font-semibold rounded hover:bg-blue-700 disabled:opacity-50"
+                className="w-full max-w-sm px-6 py-4 bg-blue-600 text-white text-xl font-bold rounded-xl shadow-lg hover:bg-blue-700 active:scale-95 transition disabled:opacity-50"
                 disabled={submitted}
             >
                 제출
             </button>
 
-            <div className="mt-6 text-3xl font-bold text-center text-green-700">{status}</div>
+            <AnimatePresence>
+                {status && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3 }}
+                        className={`mt-8 text-2xl font-bold text-center ${
+                            status.includes('✅') ? 'text-green-600' : 'text-red-600'
+                        }`}
+                    >
+                        {status}
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </main>
     );
 }

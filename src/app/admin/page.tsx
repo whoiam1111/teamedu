@@ -19,14 +19,10 @@ export default function AdminPage() {
     const [qrUrl, setQrUrl] = useState<string | null>(null);
     const [pending, setPending] = useState<PendingByRegion>({});
 
-    // 쿠키 기반 인증 확인
     const checkAuth = async (): Promise<boolean> => {
         try {
-            const res = await fetch('/api/admin/checkAuth', {
-                credentials: 'include',
-            });
-            if (!res.ok) return false;
-            return true;
+            const res = await fetch('/api/admin/checkAuth', { credentials: 'include' });
+            return res.ok;
         } catch {
             return false;
         }
@@ -35,17 +31,13 @@ export default function AdminPage() {
     useEffect(() => {
         (async () => {
             const authenticated = await checkAuth();
-            if (!authenticated) {
-                window.location.href = '/admin/login';
-            }
+            if (!authenticated) window.location.href = '/admin/login';
         })();
     }, []);
 
     const fetchPending = async (id: string) => {
         try {
-            const res = await fetch(`/api/admin/events/${id}/pending`, {
-                credentials: 'include',
-            });
+            const res = await fetch(`/api/admin/events/${id}/pending`, { credentials: 'include' });
             if (!res.ok) throw new Error('미출석 명단 불러오기 실패');
 
             const students: Student[] = await res.json();
@@ -62,7 +54,6 @@ export default function AdminPage() {
 
     const createEvent = async () => {
         if (!date) return alert('날짜를 입력해주세요');
-
         try {
             const res = await fetch(`/api/admin/events`, {
                 method: 'POST',
@@ -70,7 +61,6 @@ export default function AdminPage() {
                 body: JSON.stringify({ date }),
                 credentials: 'include',
             });
-
             if (!res.ok) throw new Error('이벤트 생성 실패');
 
             const data = await res.json();
@@ -79,7 +69,6 @@ export default function AdminPage() {
             const studentUrl = `${window.location.origin}/checkin?event=${data.id}`;
             const qrDataUrl = await QRCode.toDataURL(studentUrl);
             setQrUrl(qrDataUrl);
-
             fetchPending(data.id);
         } catch (err: any) {
             alert(err.message);
@@ -93,60 +82,63 @@ export default function AdminPage() {
     }, [eventId]);
 
     return (
-        <div className="flex flex-col items-center justify-start w-screen h-screen bg-gray-100 p-4">
-            <h1 className="text-4xl font-bold mb-4">출석 이벤트 관리</h1>
+        <div className="w-screen h-screen bg-gradient-to-br from-pink-300 via-orange-200 to-yellow-200 flex flex-col">
+            {/* 상단 타이틀 */}
+            <header className="text-center py-6">
+                <h1 className="text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-orange-500 drop-shadow-lg">
+                    출석 체크 이벤트
+                </h1>
+                <p className="text-2xl text-gray-700 mt-2">QR을 스캔해 출석을 완료하세요!</p>
+            </header>
 
-            <div className="flex items-center gap-4 mb-4">
-                <input
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="border p-3 rounded text-2xl"
-                />
-                <button
-                    onClick={createEvent}
-                    className="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700 text-2xl"
-                >
-                    이벤트 생성
-                </button>
-            </div>
-
-            <div className="flex flex-1 w-full h-full gap-8">
-                <div className="flex-1 flex flex-col items-center justify-center">
-                    {eventId && qrUrl && (
+            {/* 본문: QR (왼쪽) | 명단 (오른쪽) */}
+            <main className="flex flex-1 px-6 pb-6 gap-6">
+                {/* QR 영역 */}
+                <section className="w-1/2 flex flex-col items-center justify-center bg-white rounded-3xl shadow-2xl p-6">
+                    {eventId && qrUrl ? (
                         <>
-                            <h2 className="text-3xl font-semibold mb-2">QR 코드</h2>
+                            <h2 className="text-4xl font-bold text-orange-600 mb-6">QR 코드</h2>
                             <img
                                 src={qrUrl}
                                 alt="출석 QR 코드"
-                                className="w-full max-w-3xl h-full max-h-[80vh] border-4 border-gray-800 p-4 rounded-lg shadow-lg"
+                                className="w-full h-full max-w-[650px] max-h-[650px] border-8 border-pink-500 rounded-3xl shadow-xl bg-white"
                             />
-                            <p className="text-xl text-gray-500 mt-4">학생들은 QR 코드를 스캔하세요</p>
+                            <p className="text-2xl text-gray-700 mt-6">📱 스캔하고 출석하세요</p>
                         </>
+                    ) : (
+                        <div className="text-3xl text-gray-500">이벤트를 생성해주세요</div>
                     )}
-                </div>
+                </section>
 
-                <div className="flex-1 h-full overflow-hidden flex flex-col">
-                    <h2 className="text-3xl font-semibold mb-4 text-center">미출석 학생 명단</h2>
-                    <div className="flex-1 grid grid-cols-2 gap-2 overflow-hidden">
-                        {Object.keys(pending).length === 0 && (
-                            <p className="text-xl text-gray-500 col-span-2 text-center">모든 학생이 출석했습니다</p>
+                {/* 미출석 명단 */}
+                <section className="w-1/2 flex flex-col bg-white/90 rounded-3xl shadow-xl p-6">
+                    <h2 className="text-4xl font-bold text-pink-600 mb-6 text-center">📋 미출석 명단</h2>
+                    <div className="flex-1 overflow-y-auto grid grid-cols-2 gap-4 pr-2">
+                        {Object.keys(pending).length === 0 ? (
+                            <p className="text-3xl text-center text-green-600">모두 출석 완료 🎉</p>
+                        ) : (
+                            Object.entries(pending).map(([region, students]) => (
+                                <div
+                                    key={region}
+                                    className="border-2 border-orange-300 rounded-2xl p-4 bg-orange-50/70"
+                                >
+                                    <h3 className="font-bold text-2xl text-orange-700 mb-3">{region}</h3>
+                                    <ul className="grid grid-cols-1 gap-2 text-2xl">
+                                        {students.map((s) => (
+                                            <li
+                                                key={s.id}
+                                                className="py-2 px-3 bg-white rounded-xl shadow-sm text-gray-800"
+                                            >
+                                                {s.name}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            ))
                         )}
-                        {Object.entries(pending).map(([region, students]) => (
-                            <div key={region} className="col-span-1 flex flex-col border rounded p-2 overflow-hidden">
-                                <h3 className="font-bold text-xl text-blue-700 mb-2">{region}</h3>
-                                <ul className="flex-1 overflow-hidden">
-                                    {students.map((s) => (
-                                        <li key={s.id} className="text-sm py-1 border-b last:border-b-0">
-                                            {s.name}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        ))}
                     </div>
-                </div>
-            </div>
+                </section>
+            </main>
         </div>
     );
 }

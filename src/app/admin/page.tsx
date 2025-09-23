@@ -83,12 +83,28 @@ export default function AdminPage() {
 
     return (
         <div className="w-screen h-screen bg-gradient-to-br from-pink-300 via-orange-200 to-yellow-200 flex flex-col">
-            {/* 상단 타이틀 */}
+            {/* 상단 타이틀 + 날짜 입력 */}
             <header className="text-center py-6">
                 <h1 className="text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-orange-500 drop-shadow-lg">
                     출석 체크 이벤트
                 </h1>
                 <p className="text-2xl text-gray-700 mt-2">QR을 스캔해 출석을 완료하세요!</p>
+
+                {/* 날짜 입력 + 이벤트 생성 */}
+                <div className="mt-6 flex items-center justify-center gap-4">
+                    <input
+                        type="date"
+                        value={date}
+                        onChange={(e) => setDate(e.target.value)}
+                        className="border-2 border-pink-400 rounded-xl px-4 py-2 text-2xl shadow-md focus:ring-4 focus:ring-pink-300"
+                    />
+                    <button
+                        onClick={createEvent}
+                        className="bg-gradient-to-r from-pink-500 to-orange-400 text-white text-2xl font-bold px-6 py-3 rounded-xl shadow-lg hover:scale-105 transition"
+                    >
+                        이벤트 생성
+                    </button>
+                </div>
             </header>
 
             {/* 본문: QR (왼쪽) | 명단 (오른쪽) */}
